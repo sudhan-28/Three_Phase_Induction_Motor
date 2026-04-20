@@ -88,7 +88,7 @@ export default function useESP32(config) {
     };
 
     ws.onclose = (e) => {
-      setState(s => ({ ...s, connected: false, connecting: false }));
+      setState(s => ({ ...s, connected: false, connecting: config.autoReconnect !== false }));
       addLog(`Disconnected (code ${e.code}) — check ESP32 connection`, 'warn');
       // Auto-reconnect after 5s if enabled
       if (config.autoReconnect !== false) {

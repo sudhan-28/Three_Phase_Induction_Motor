@@ -2,36 +2,30 @@
 // ============================================================
 // Root component — wires all panels together (WS or Firebase)
 // ============================================================
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import './App.css';
 
-import useESP32        from './hooks/useESP32';
 import useFirebaseESP32 from './hooks/useFirebaseESP32';
-import Header          from './components/Header';
-import PhaseCard       from './components/PhaseCard';
+import Header           from './components/Header';
+import PhaseCard        from './components/PhaseCard';
 import MotorControlCard from './components/MotorControlCard';
-import GpioCard        from './components/GpioCard';
-import SystemInfoCard  from './components/SystemInfoCard';
-import EventLog        from './components/EventLog';
-import ConfigModal     from './components/ConfigModal';
+import GpioCard         from './components/GpioCard';
+import SystemInfoCard   from './components/SystemInfoCard';
+import EventLog         from './components/EventLog';
 
 export default function App() {
-  const [config, setConfig]         = useState({ connectionType: 'ws', ip: '', port: 81, autoReconnect: true });
-  const [showConfig, setShowConfig] = useState(false);
+  const firebaseConfig = {
+    databaseURL: 'https://motordashboard-default-rtdb.asia-southeast1.firebasedatabase.app'
+  };
+  const deviceId = 'motor-001';
 
-  // Dynamic hook based on config
-  const wsHook = useESP32(config);
-  const firebaseHook = useFirebaseESP32(config.firebaseConfig, config.deviceId);
-  const hook = config.connectionType === 'ws' ? wsHook : firebaseHook;
-  const { state, logs, sendCmd, connect } = hook;
+  // Firebase hook
+  const { state, logs, sendCmd, connect } = useFirebaseESP32(firebaseConfig, deviceId);
 
-  // Auto-connect on valid config change
+  // Auto-connect on mount
   useEffect(() => {
-    if ((config.connectionType === 'ws' && config.ip) || 
-        (config.connectionType === 'firebase' && config.firebaseConfig && config.deviceId)) {
-      connect?.();
-    }
-  }, [config, connect]);
+    connect?.();
+  }, [connect]);
 
   // ---- Commands ------------------------------------------------
   const handleStart = useCallback(() => {
@@ -50,11 +44,6 @@ export default function App() {
     sendCmd('RESET_FAULT');
   }, [sendCmd]);
 
-  const handleConfigSave = useCallback((newConfig) => {
-    setConfig(newConfig);
-    setShowConfig(false);
-  }, []);
-
   return (
     <div className="app">
       {/* Fault alert banner */}
@@ -65,12 +54,7 @@ export default function App() {
       )}
 
       {/* Header */}
-      <Header
-        state={state}
-        connectionType={config.connectionType}
-        onConfigClick={() => setShowConfig(true)}
-        onConnectClick={connect}
-      />
+      <Header state={state} />
 
       {/* Main 2-column grid */}
       <div className="grid-main">
@@ -90,15 +74,6 @@ export default function App() {
         <SystemInfoCard state={state} />
         <EventLog logs={logs} />
       </div>
-
-      {/* Config modal */}
-      {showConfig && (
-        <ConfigModal
-          config={config}
-          onSave={handleConfigSave}
-          onClose={() => setShowConfig(false)}
-        />
-      )}
     </div>
   );
 }

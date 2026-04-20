@@ -6,6 +6,7 @@
   min-height: 100vh;
 }
 
+
 /* Shared card styles — used by all child card components */
 .card {
   background: var(--bg-card);

@@ -10,6 +10,7 @@ import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 
 const INITIAL_STATE = {
   connected:     false,
+  connecting:    true,
   phases:        { R: false, Y: false, B: false },
   motorOn:       false,
   autoMode:      true,
@@ -42,6 +43,7 @@ export default function useFirebaseESP32(firebaseConfig, deviceId) {
   const dbRef                = useRef(null);
   const statusRef            = useRef(null);
   const commandRef           = useRef(null);
+  const heartbeatTimerRef    = useRef(null);
 
   const addLog = useCallback((msg, type = 'info') => {
     setLogs(prev => [makeLog(msg, type), ...prev].slice(0, 100));
@@ -70,12 +72,20 @@ export default function useFirebaseESP32(firebaseConfig, deviceId) {
       // Listen for ESP32 status updates
       const unsubscribeStatus = onValue(statusRef.current, (snapshot) => {
         const data = snapshot.val();
-        if (data) {
-          setState(prev => ({ ...prev, connected: true, ...data }));
+        if (data && data !== null) {
+          setState(prev => ({ ...prev, connected: true, connecting: false, ...data }));
           addLog('← ESP32 status update', 'data');
+
+          // Reset heartbeat timer on each new update
+          if (heartbeatTimerRef.current) clearTimeout(heartbeatTimerRef.current);
+          heartbeatTimerRef.current = setTimeout(() => {
+            setState(prev => ({ ...prev, connected: false, connecting: false }));
+            addLog('ESP32 offline (no data for 15s)', 'warn');
+          }, 15000); // 15 seconds timeout
         }
       }, (error) => {
         addLog('Firebase status listen error: ' + error.message, 'error');
+        setState(prev => ({ ...prev, connected: false, connecting: false }));
       });
 
       // Listen for logs/events from ESP32
@@ -91,11 +101,16 @@ export default function useFirebaseESP32(firebaseConfig, deviceId) {
       return () => {
         unsubscribeStatus();
         unsubscribeLogs();
+        if (heartbeatTimerRef.current) clearTimeout(heartbeatTimerRef.current);
       };
     } catch (error) {
       addLog('Firebase init error: ' + error.message, 'error');
     }
   }, [firebaseConfig, deviceId, addLog]);
+
+  const connect = useCallback(() => {
+    addLog('Firebase listener active — waiting for device...', 'info');
+  }, [addLog]);
 
   // ----------------------------------------------------------
   // Send command to ESP32 via Firebase
@@ -117,9 +132,6 @@ export default function useFirebaseESP32(firebaseConfig, deviceId) {
     return true;
   }, [addLog]);
 
-  // ----------------------------------------------------------
-  // Clear old commands (ESP32 should clear after process)
-  // ----------------------------------------------------------
   const clearCommands = useCallback(() => {
     if (commandRef.current) {
       set(commandRef.current, null);
@@ -127,6 +139,6 @@ export default function useFirebaseESP32(firebaseConfig, deviceId) {
     }
   }, []);
 
-  return { state, logs, sendCmd, clearCommands };
+  return { state, logs, sendCmd, clearCommands, connect };
 }
 

@@ -2,14 +2,13 @@
 import React from 'react';
 import './Header.css';
 
-export default function Header({ state, simMode, onConfigClick, onConnectClick }) {
+export default function Header({ state }) {
   const { connected, connecting } = state;
 
   const statusClass = connected ? 'connected' : connecting ? 'connecting' : 'disconnected';
-  const statusLabel = connected    ? `Live · ${state.uptime > 0 ? 'ESP32' : 'Connected'}`
-                    : connecting   ? 'Connecting…'
-                    : simMode      ? 'Simulation'
-                    :                'Disconnected';
+  const statusLabel = connected    ? `Online · ${state.uptime > 0 ? 'ESP32' : 'Connected'}`
+                    : connecting   ? 'Searching for Device…'
+                    :                'Offline · Waiting for Device';
 
   return (
     <header className="dashboard-header">
@@ -22,18 +21,14 @@ export default function Header({ state, simMode, onConfigClick, onConnectClick }
       </div>
 
       <div className="header-actions">
-        <button
-          className={`conn-btn conn-btn--${statusClass}`}
-          onClick={connected ? undefined : onConnectClick}
-          title={connected ? 'Connected to ESP32' : 'Click to connect'}
+        <div
+          className={`status-badge status-badge--${statusClass}`}
+          title={connected ? 'Device is online' : 'Waiting for device to come online...'}
         >
-          <span className={`conn-dot ${connecting || simMode ? 'pulse' : ''}`} />
+          <span className={`status-dot ${connecting || !connected ? 'pulse' : ''}`} />
           {statusLabel}
-        </button>
+        </div>
 
-        <button className="config-btn" onClick={onConfigClick} title="Connection settings">
-          ⚙
-        </button>
       </div>
     </header>
   );

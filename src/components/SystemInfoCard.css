@@ -1,12 +1,19 @@
 /* SystemInfoCard.css */
 .sysinfo-card {}
 
-.sim-badge {
+.searching-badge {
   font-size: 11px; font-family: var(--font-mono);
-  background: rgba(212,160,23,.08);
-  border: 1px solid rgba(212,160,23,.3);
-  color: #f39c12; padding: 8px 10px; border-radius: 6px;
+  background: rgba(52, 152, 219, 0.08);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  color: #3498db; padding: 8px 10px; border-radius: 6px;
   margin-bottom: 12px; text-align: center; line-height: 1.4;
+  animation: pulse-border 2s infinite ease-in-out;
+}
+
+@keyframes pulse-border {
+  0% { border-color: rgba(52, 152, 219, 0.3); }
+  50% { border-color: rgba(52, 152, 219, 0.8); }
+  100% { border-color: rgba(52, 152, 219, 0.3); }
 }
 
 .stat-grid {
