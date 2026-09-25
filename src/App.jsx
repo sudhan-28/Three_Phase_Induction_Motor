@@ -2,7 +2,7 @@
 // ============================================================
 // Root component — wires all panels together (WS or Firebase)
 // ============================================================
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
 
 import useFirebaseESP32 from './hooks/useFirebaseESP32';
@@ -12,8 +12,11 @@ import MotorControlCard from './components/MotorControlCard';
 import GpioCard         from './components/GpioCard';
 import SystemInfoCard   from './components/SystemInfoCard';
 import EventLog         from './components/EventLog';
+import { translations } from './i18n';
 
 export default function App() {
+  const [language, setLanguage] = useState('ta');
+  const t = translations[language];
   const firebaseConfig = {
     databaseURL: 'https://motordashboard-default-rtdb.asia-southeast1.firebasedatabase.app'
   };
@@ -54,25 +57,26 @@ export default function App() {
       )}
 
       {/* Header */}
-      <Header state={state} />
+      <Header state={state} t={t} language={language} onLanguageToggle={() => setLanguage(value => value === 'ta' ? 'en' : 'ta')} />
 
       {/* Main 2-column grid */}
       <div className="grid-main">
-        <PhaseCard phases={state.phases} voltage={state.voltage} autoMode={state.autoMode} />
+        <PhaseCard phases={state.phases} voltage={state.voltage} autoMode={state.autoMode} t={t} />
         <MotorControlCard
           state={state}
           onStart={handleStart}
           onStop={handleStop}
           onToggleAuto={handleToggleAuto}
           onResetFault={handleResetFault}
+          t={t}
         />
       </div>
 
       {/* Bottom 3-column grid */}
       <div className="grid-bottom">
-        <GpioCard phases={state.phases} motorOn={state.motorOn} />
-        <SystemInfoCard state={state} />
-        <EventLog logs={logs} />
+        <GpioCard phases={state.phases} motorOn={state.motorOn} t={t} />
+        <SystemInfoCard state={state} t={t} />
+        <EventLog logs={logs} t={t} />
       </div>
     </div>
   );

@@ -1,34 +1,22 @@
-// src/components/Header.jsx
 import React from 'react';
 import './Header.css';
 
-export default function Header({ state }) {
+export default function Header({ state, t, language, onLanguageToggle }) {
   const { connected, connecting } = state;
-
   const statusClass = connected ? 'connected' : connecting ? 'connecting' : 'disconnected';
-  const statusLabel = connected    ? `Online · ${state.uptime > 0 ? 'ESP32' : 'Connected'}`
-                    : connecting   ? 'Searching for Device…'
-                    :                'Offline · Waiting for Device';
+  const statusLabel = connected ? `${t.online} · ${state.uptime > 0 ? 'ESP32' : t.connected}` : connecting ? t.searching : t.offline;
 
   return (
     <header className="dashboard-header">
       <div className="header-brand">
         <div className="header-logo">⚡</div>
-        <div>
-          <h1 className="header-title">Motor Control Dashboard</h1>
-          <p className="header-sub">ESP32-WROOM · 3-Phase Monitor · IoT Remote Control</p>
-        </div>
+        <div><h1 className="header-title">{t.dashboard}</h1><p className="header-sub">{t.subtitle}</p></div>
       </div>
-
       <div className="header-actions">
-        <div
-          className={`status-badge status-badge--${statusClass}`}
-          title={connected ? 'Device is online' : 'Waiting for device to come online...'}
-        >
-          <span className={`status-dot ${connecting || !connected ? 'pulse' : ''}`} />
-          {statusLabel}
+        <div className={`status-badge status-badge--${statusClass}`} title={connected ? t.deviceOnline : t.waitingDevice}>
+          <span className={`status-dot ${connecting || !connected ? 'pulse' : ''}`} />{statusLabel}
         </div>
-
+        <button className="language-toggle" onClick={onLanguageToggle} aria-label={`Switch language to ${language === 'ta' ? 'English' : 'Tamil'}`}>{t.language}</button>
       </div>
     </header>
   );
